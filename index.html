@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Moteur de Recherche</title>
+  <!-- Ajoutez ce style dans <head> -->
+<style>
+  .result-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px 0;
+  }
+  .result-image {
+    max-width: 200px;
+    max-height: 150px;
+    margin-bottom: 10px;
+  }
+</style>
+
+<!-- Modifiez la fonction d'affichage dans <script> -->
+<script>
+  function displayResults(data) {
+    const resultsList = document.getElementById("results");
+    resultsList.innerHTML = "";
+
+    data.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+
+      // Affiche l'image si disponible
+      if (item.image_url) {
+        const img = document.createElement("img");
+        img.src = item.image_url;
+        img.className = "result-image";
+        img.alt = item.title;
+        div.appendChild(img);
+      }
+
+      // Affiche le titre (lien cliquable)
+      const link = document.createElement("a");
+      link.href = item.url;
+      link.textContent = item.title || "Sans titre";
+      link.target = "_blank";
+      div.appendChild(link);
+
+      // Affiche le score
+      const score = document.createElement("p");
+      score.textContent = `Score: ${item.score?.toFixed(2) || "N/A"}`;
+      div.appendChild(score);
+
+      resultsList.appendChild(div);
+    });
+  }
+</script>
+</head>
+<body>
+  <h1>Recherche intelligente</h1>
+  
+  <!-- Le champ de texte -->
+  <input type="text" id="query" placeholder="Tape quelque chose..." />
+
+  <!-- Le bouton de recherche -->
+  <button id="searchButton">Rechercher</button>
+
+  <ul id="results"></ul>
+
+  <script>
+    // Attacher l'événement au bouton
+    document.getElementById("searchButton").addEventListener("click", async function(event) {
+      event.preventDefault();  // Empêcher le comportement par défaut du bouton
+      
+      const query = document.getElementById("query").value;
+  
+      const res = await fetch("http://127.0.0.1:5000/search", {
+        method: "POST",  // Utiliser POST
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query: query, mode: "text" })  // Envoi des données en JSON
+      });
+
+      const data = await res.json();
+  
+      const resultsList = document.getElementById("results");
+      resultsList.innerHTML = "";
+  
+      data.forEach(result => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = result.url;
+        a.textContent = `${result.url} (score: ${result.score.toFixed(2)})`;
+        a.target = "_blank";
+        li.appendChild(a);
+        resultsList.appendChild(li);
+      });
+    });
+  </script>
+  <!-- Ajoutez cette section après le champ texte existant -->
+<div>
+  <h3>Recherche par image</h3>
+  <input type="text" id="imageUrl" placeholder="Collez l'URL d'une image..." style="width: 300px;" />
+  <button id="searchImageButton">Rechercher</button>
+</div>
+
+<script>
+  // Gestion de la recherche par image
+  document.getElementById("searchImageButton").addEventListener("click", async function() {
+    const imageUrl = document.getElementById("imageUrl").value;
+    
+    if (!imageUrl) {
+      alert("Veuillez entrer une URL d'image valide !");
+      return;
+    }
+
+    const res = await fetch("http://127.0.0.1:5000/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        image_url: imageUrl,  // Envoi de l'URL image
+        mode: "image"        // Mode spécifique
+      })
+    });
+
+    const data = await res.json();
+    displayResults(data);  // Réutilisez votre fonction d'affichage existante
+  });
+
+  // Fonction pour afficher les résultats (existe déjà probablement)
+  function displayResults(data) {
+    const resultsList = document.getElementById("results");
+    resultsList.innerHTML = "";
+    
+    data.forEach(result => {
+      const li = document.createElement("li");
+      li.innerHTML = `<a href="${result.url}" target="_blank">${result.title} (score: ${result.score.toFixed(2)})</a>`;
+      resultsList.appendChild(li);
+    });
+  }
+</script>
+</body>
+</html>

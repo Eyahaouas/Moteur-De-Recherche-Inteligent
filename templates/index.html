@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moteur de Recherche</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6D5ACF;
+            --primary-light: #9D8DF1;
+            --secondary: #FF6978;
+            --background: #F8F7FF;
+            --card: #FFFFFF;
+            --text: #2D3142;
+            --text-light: #BFC0C0;
+            --shadow: 0 4px 20px rgba(109, 90, 207, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #query {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--primary-light);
+            border-radius: 50px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background-color: var(--card);
+            box-shadow: var(--shadow);
+        }
+
+        #query:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(109, 90, 207, 0.2);
+        }
+
+        #searchButton {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        #searchButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(109, 90, 207, 0.3);
+        }
+
+        #results {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            padding: 0;
+        }
+
+        .result-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(109, 90, 207, 0.2);
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            display: block;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .result-title:hover {
+            color: var(--secondary);
+        }
+
+        .result-url {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .result-snippet {
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .result-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .result-score {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .result-image {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .result-image:hover {
+            transform: scale(1.02);
+        }
+
+        .loading, .error-message {
+            text-align: center;
+            padding: 2rem;
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+        }
+
+        .loading {
+            color: var(--primary);
+        }
+
+        .error-message {
+            color: var(--secondary);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            #searchButton {
+                width: 100%;
+            }
+        }
+        /* Styles pour la recherche par image */
+.image-search {
+    margin-top: 2rem;
+    flex-direction: column;
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--primary-light);
+}
+
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-light);
+    position: relative;
+}
+
+.tab-button.active {
+    color: var(--primary);
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary);
+}
+
+.tab-content {
+    display: none;
+    width: 100%;
+}
+
+.tab-content.active {
+    display: flex;
+    gap: 1rem;
+}
+
+#imageUrl {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: 2px solid var(--primary-light);
+    border-radius: 50px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.upload-area {
+    width: 100%;
+    padding: 2rem;
+    border: 2px dashed var(--primary-light);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: var(--primary);
+    background: rgba(109, 90, 207, 0.05);
+}
+
+.upload-area svg {
+    margin-bottom: 1rem;
+    stroke: var(--primary);
+}
+
+.browse-link {
+    color: var(--primary);
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.upload-area small {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--text-light);
+}
+
+.preview-image {
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 8px;
+    margin-top: 1rem;
+    display: none;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Moteur de Recherche</h1>
+        </header>
+
+        <div class="search-container">
+            <input type="text" id="query" placeholder="Rechercher des informations, images..." aria-label="Rechercher">
+            <button id="searchButton" onclick="search()">Explorer</button>
+        </div>
+        <!-- Nouvelle section pour la recherche par image -->
+<div class="search-container image-search">
+    <div class="tabs">
+        <button class="tab-button active" onclick="switchTab('url-tab')">URL d'image</button>
+        <button class="tab-button" onclick="switchTab('upload-tab')">Upload d'image</button>
+    </div>
+
+    <!-- Recherche par URL -->
+    <div id="url-tab" class="tab-content active">
+        <input type="text" id="imageUrl" placeholder="Coller l'URL d'une image..." aria-label="URL d'image">
+        <button id="searchImageButton" onclick="searchByImageUrl()">Rechercher</button>
+    </div>
+
+    <!-- Recherche par Upload -->
+    <div id="upload-tab" class="tab-content">
+        <div class="upload-area" id="uploadArea">
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p>Glissez-déposez une image ou <span class="browse-link">parcourez</span></p>
+            <small>Formats supportés: JPG, PNG, WEBP (max 5MB)</small>
+        </div>
+    </div>
+</div>
+        <ul id="results"></ul>
+    </div>
+
+    <script>
+        async function search() {
+            const query = document.getElementById("query").value.trim();
+            const resultsList = document.getElementById("results");
+
+            if (!query) {
+                resultsList.innerHTML = '<li class="error-message">Veuillez entrer une recherche valide</li>';
+                return;
+            }
+
+            resultsList.innerHTML = '<li class="loading"><svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 10px; vertical-align: middle;"><path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25"/><path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"><animateTransform attributeName="transform" type="rotate" dur="0.75s" values="0 12 12;360 12 12" repeatCount="indefinite"/></path></svg>Recherche en cours...</li>';
+
+            try {
+                const response = await fetch("/search", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ 
+                        query: query, 
+                        mode: "text" 
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                resultsList.innerHTML = "";
+
+                if (data.length === 0) {
+                    resultsList.innerHTML = '<li class="error-message">Aucun résultat trouvé pour "' + query + '"</li>';
+                    return;
+                }
+
+                data.forEach(result => {
+                    const li = document.createElement("li");
+                    li.className = "result-card";
+
+                    // Titre
+                    const title = document.createElement("a");
+                    title.className = "result-title";
+                    title.href = result.url;
+                    title.textContent = result.title || new URL(result.url).hostname.replace('www.', '');
+                    title.target = "_blank";
+                    li.appendChild(title);
+
+                    // URL
+                    const url = document.createElement("span");
+                    url.className = "result-url";
+                    url.textContent = result.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+                    li.appendChild(url);
+
+                    // Image
+                    if (result.image) {
+                        const img = document.createElement("img");
+                        img.className = "result-image";
+                        img.src = result.image;
+                        img.alt = "Miniature du résultat";
+                        img.onerror = function() { this.style.display = 'none'; };
+                        li.appendChild(img);
+                    }
+
+                    // Snippet
+                    if (result.snippet) {
+                        const snippet = document.createElement("p");
+                        snippet.className = "result-snippet";
+                        snippet.textContent = result.snippet;
+                        li.appendChild(snippet);
+                    }
+
+                    // Score
+                    if (result.score !== undefined) {
+                        const score = document.createElement("div");
+                        score.className = "result-score";
+                        score.textContent = `Pertinence: ${(result.score * 100).toFixed(0)}%`;
+                        li.appendChild(score);
+                    }
+
+                    resultsList.appendChild(li);
+                });
+
+            } catch (error) {
+                console.error("Erreur:", error);
+                resultsList.innerHTML = '<li class="error-message">Une erreur est survenue. Veuillez réessayer plus tard.</li>';
+            }
+        }
+
+        document.getElementById("query").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                search();
+            }
+        });
+
+        document.getElementById("query").focus();
+        // Gestion des onglets
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    event.currentTarget.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+// Recherche par URL d'image
+async function searchByImageUrl() {
+    const imageUrl = document.getElementById("imageUrl").value.trim();
+    const resultsList = document.getElementById("results");
+
+    if (!imageUrl) {
+        resultsList.innerHTML = '<li class="error-message">Veuillez entrer une URL valide</li>';
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const response = await fetch("/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                image_url: imageUrl,
+                mode: "image" 
+            })
+        });
+
+        handleSearchResponse(response);
+    } catch (error) {
+        showError(error);
+    }
+}
+
+// Gestion de l'upload
+document.getElementById("uploadArea").addEventListener("click", () => {
+    document.getElementById("imageUpload").click();
+});
+
+document.getElementById("imageUpload").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Vérification du type et taille
+    if (!file.type.match('image.*')) {
+        showError("Seules les images sont acceptées");
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        showError("L'image doit faire moins de 5MB");
+        return;
+    }
+
+    showLoading();
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+        const response = await fetch("/upload_search", {
+            method: "POST",
+            body: formData
+        });
+
+        handleSearchResponse(response);
+    } catch (error) {
+        showError(error);
+    }
+});
+
+// Drag and drop
+const uploadArea = document.getElementById("uploadArea");
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight() {
+    uploadArea.classList.add('highlight');
+}
+
+function unhighlight() {
+    uploadArea.classList.remove('highlight');
+}
+
+uploadArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    document.getElementById("imageUpload").files = files;
+    const event = new Event('change');
+    document.getElementById("imageUpload").dispatchEvent(event);
+}
+
+// Fonctions utilitaires
+function showLoading() {
+    document.getElementById("results").innerHTML = '<li class="loading"><svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 10px; vertical-align: middle;"><path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25"/><path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"><animateTransform attributeName="transform" type="rotate" dur="0.75s" values="0 12 12;360 12 12" repeatCount="indefinite"/></path></svg>Traitement de l\'image...</li>';
+}
+
+async function handleSearchResponse(response) {
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+
+    const data = await response.json();
+    document.getElementById("results").innerHTML = "";
+
+    if (data.length === 0) {
+        document.getElementById("results").innerHTML = '<li class="error-message">Aucun résultat trouvé</li>';
+        return;
+    }
+
+    // Utilisez votre fonction d'affichage existante
+    data.forEach(result => {
+        // ... (votre code d'affichage existant)
+    });
+}
+
+function showError(error) {
+    console.error("Erreur:", error);
+    document.getElementById("results").innerHTML = '<li class="error-message">Erreur: ' + (error.message || error) + '</li>';
+}
+    </script>
+</body>
+</html>

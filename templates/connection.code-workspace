@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "../../bd/connection"
+		},
+		{
+			"path": "../../web/tp1"
+		},
+		{
+			"path": "../../web/tp2"
+		},
+		{
+			"path": "../../web/tp3"
+		},
+		{
+			"path": "../../web/tp4"
+		},
+		{
+			"path": "../../moteur"
+		}
+	]
+}
